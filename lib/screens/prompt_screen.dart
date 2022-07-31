@@ -26,28 +26,11 @@ class _PromptScreenState extends State<PromptScreen> {
   Widget build(BuildContext context) {
     return BlocConsumer<BuddyBloc, BuddyState>(
       listener: (context, state) async {
-        // if (state.status == BuddyStatus.busy) {
-        //   _scrollController.animateTo(
-        //     _scrollController.position.maxScrollExtent,
-        //     duration: const Duration(milliseconds: 100),
-        //     curve: Curves.easeOut,
-        //   );
-        // }
-        // if (state.status == BuddyStatus.idle) {
-        //   WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-        //     await _scrollController.animateTo(
-        //       _scrollController.position.maxScrollExtent == 0 ? 0 : _scrollController.position.maxScrollExtent + 50,
-        //       duration: const Duration(milliseconds: 600),
-        //       curve: Curves.easeOut,
-        //     );
-        //   });
-        // }
-
         if (state.isMicAvailable && state.isListening) {
           context.read<BuddyBloc>().add(BuddyStartListeningEvent());
         }
 
-        if (state.mode == BuddyMode.speak) {
+        if (state.mode == BuddyMode.speak && state.status != BuddyStatus.idle) {
           context.read<BuddyBloc>().add(BuddySendEvent());
         }
       },
@@ -63,7 +46,8 @@ class _PromptScreenState extends State<PromptScreen> {
                 });
               }
 
-              if (state.prompt.length > 4 && notification is ScrollMetricsNotification) {
+              if (state.deviceHeight + _scrollController.position.maxScrollExtent > state.deviceHeight &&
+                  notification is ScrollMetricsNotification) {
                 if (notification.metrics.pixels == notification.metrics.maxScrollExtent) {
                   context.read<BuddyBloc>().add(BuddySetScrollTop(canScrollTop: true));
                 } else {
@@ -146,7 +130,11 @@ class _PromptScreenState extends State<PromptScreen> {
                           child: state.mode != BuddyMode.listening
                               ? GestureDetector(
                                   onTap: () {
-                                    context.read<BuddyBloc>().add(BuddyCheckListenEvent());
+                                    if (state.mode != BuddyMode.speak) {
+                                      context
+                                          .read<BuddyBloc>()
+                                          .add(BuddyCheckListenEvent(height: MediaQuery.of(context).size.height));
+                                    }
                                   },
                                   child: Image.asset(
                                     'assets/mic_static.png',

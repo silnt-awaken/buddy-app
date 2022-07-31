@@ -43,22 +43,35 @@ class BuddyRepository {
   }
 
   Future<String> sendMessage(Map<int, String> prompt) async {
-    final openAiService = OpenAiService();
-    // convert the map to a string
-    final promptString = prompt.values.join('\n');
-    final response = await openAiService.create(prompt: promptString);
+    late final String response;
+    // check for the last prompt in the map to see if it contains "book" to setup booking feature
+    final lastPrompt = prompt.values.last;
+    if (lastPrompt.contains('book') && lastPrompt.contains('appointment')) {
+      response = await Future.delayed(
+          const Duration(milliseconds: 100),
+          () =>
+              ' Sure, I can do that for you. What is the address of the location you want to book at? (Specify the city and state)');
+    } else {
+      final openAiService = OpenAiService();
+      // convert the map to a string
+      final promptString = prompt.values.join('\n');
+      response = await openAiService.create(prompt: promptString);
+    }
+
     return response;
   }
 
   String convertResponseToReadableText(String response) {
+    if (!response.contains(':')) {
+      return response;
+    }
+
     final responseSection = response.split(':');
     final readableText = responseSection.last;
     return readableText;
   }
 
   Future<void> _initializeTts() async {
-    final voices = await _tts.getVoices;
-    print(voices);
     await _tts.setVoice({"name": "en-us-x-tpf-local", "locale": "en-US"});
     await _initIos();
     await _tts.awaitSpeakCompletion(true);
@@ -76,6 +89,7 @@ class BuddyRepository {
 
   Future<void> speak(String text) async {
     await _initializeTts();
+    await _tts.awaitSpeakCompletion(true);
     await _tts.speak(text);
   }
 }

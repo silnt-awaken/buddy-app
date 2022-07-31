@@ -7,7 +7,10 @@ class BuddyInitializeEvent extends BuddyEvent {}
 
 class BuddySendEvent extends BuddyEvent {}
 
-class BuddyCheckListenEvent extends BuddyEvent {}
+class BuddyCheckListenEvent extends BuddyEvent {
+  final double height;
+  BuddyCheckListenEvent({required this.height});
+}
 
 class BuddyStartListeningEvent extends BuddyEvent {}
 

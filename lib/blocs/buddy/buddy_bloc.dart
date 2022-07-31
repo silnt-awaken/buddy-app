@@ -21,11 +21,14 @@ class BuddyBloc extends Bloc<BuddyEvent, BuddyState> {
           feedback: '',
           mode: BuddyMode.idle,
           canScrollTop: false,
+          deviceHeight: 0,
         )) {
     on<BuddyInitializeEvent>((event, emit) async {
       await buddyRepository.speak('Hello, I am your buddy');
     });
     on<BuddyCheckListenEvent>((event, emit) async {
+      emit(state.copyWith(deviceHeight: event.height));
+
       final isAvailable = await buddyRepository.initializeSpeech();
       emit(state.copyWith(isMicAvailable: isAvailable));
       if (isAvailable) {
@@ -33,6 +36,7 @@ class BuddyBloc extends Bloc<BuddyEvent, BuddyState> {
         emit(state.copyWith(isListening: isListening, mode: BuddyMode.listening, status: BuddyStatus.busy));
 
         await emit.forEach<String>(buddyRepository.handleFeedback(), onData: (feedback) {
+          print('feedback: $feedback');
           return state.copyWith(
             mode: BuddyMode.speak,
             input: feedback,
@@ -49,7 +53,8 @@ class BuddyBloc extends Bloc<BuddyEvent, BuddyState> {
           final prompt = '$sender: $result\n';
           final newPrompt = {...state.prompt, state.currentId: prompt};
 
-          return state.copyWith(input: result, prompt: newPrompt, isListening: false, isMicAvailable: false);
+          return state.copyWith(
+              input: result, prompt: newPrompt, isListening: false, isMicAvailable: false, mode: BuddyMode.listening);
         });
       } else {
         emit(state.copyWith(status: BuddyStatus.error));
@@ -60,7 +65,10 @@ class BuddyBloc extends Bloc<BuddyEvent, BuddyState> {
       final prompt = '$sender: ${state.input}\n';
       // now add the prompt to the map
       final newPrompt = {...state.prompt, state.currentId: prompt};
-      emit(state.copyWith(prompt: newPrompt));
+      emit(state.copyWith(
+        prompt: newPrompt,
+        mode: BuddyMode.speak,
+      ));
 
       final response = await buddyRepository.sendMessage(newPrompt);
       final readableText = buddyRepository.convertResponseToReadableText(response);
@@ -72,10 +80,10 @@ class BuddyBloc extends Bloc<BuddyEvent, BuddyState> {
         prompt: newResponse,
         response: readableText,
         currentId: newResponse.keys.last + 1,
-        mode: BuddyMode.idle,
+        status: BuddyStatus.busy,
       ));
       await buddyRepository.speak(readableText);
-      emit(state.copyWith(status: BuddyStatus.idle));
+      emit(state.copyWith(mode: BuddyMode.idle, status: BuddyStatus.idle));
     });
 
     on<BuddySetScrollTop>((event, emit) {
