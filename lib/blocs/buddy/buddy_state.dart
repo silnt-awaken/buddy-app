@@ -10,6 +10,7 @@ class BuddyState extends Equatable {
   final bool isListening;
   final String feedback;
   final BuddyMode mode;
+  final bool canScrollTop;
 
   const BuddyState({
     required this.prompt,
@@ -21,10 +22,12 @@ class BuddyState extends Equatable {
     required this.isListening,
     required this.feedback,
     required this.mode,
+    required this.canScrollTop,
   });
 
   @override
-  List<Object> get props => [prompt, response, input, status, currentId, isMicAvailable, isListening, feedback, mode];
+  List<Object> get props =>
+      [prompt, response, input, status, currentId, isMicAvailable, isListening, feedback, mode, canScrollTop];
 
   BuddyState copyWith({
     Map<int, String>? prompt,
@@ -36,6 +39,7 @@ class BuddyState extends Equatable {
     bool? isListening,
     String? feedback,
     BuddyMode? mode,
+    bool? canScrollTop,
   }) {
     return BuddyState(
       prompt: prompt ?? this.prompt,
@@ -47,6 +51,7 @@ class BuddyState extends Equatable {
       isListening: isListening ?? this.isListening,
       feedback: feedback ?? this.feedback,
       mode: mode ?? this.mode,
+      canScrollTop: canScrollTop ?? this.canScrollTop,
     );
   }
 }
@@ -59,5 +64,6 @@ enum BuddyStatus {
 
 enum BuddyMode {
   idle,
+  listening,
   speak,
 }

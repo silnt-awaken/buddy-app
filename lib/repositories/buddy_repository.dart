@@ -57,7 +57,9 @@ class BuddyRepository {
   }
 
   Future<void> _initializeTts() async {
-    await _tts.setVoice({"name": "Karen", "locale": "en-US"});
+    final voices = await _tts.getVoices;
+    print(voices);
+    await _tts.setVoice({"name": "en-us-x-tpf-local", "locale": "en-US"});
     await _initIos();
     await _tts.awaitSpeakCompletion(true);
   }

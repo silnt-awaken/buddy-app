@@ -20,6 +20,7 @@ class BuddyBloc extends Bloc<BuddyEvent, BuddyState> {
           isListening: false,
           feedback: '',
           mode: BuddyMode.idle,
+          canScrollTop: false,
         )) {
     on<BuddyInitializeEvent>((event, emit) async {
       await buddyRepository.speak('Hello, I am your buddy');
@@ -29,13 +30,12 @@ class BuddyBloc extends Bloc<BuddyEvent, BuddyState> {
       emit(state.copyWith(isMicAvailable: isAvailable));
       if (isAvailable) {
         final isListening = await buddyRepository.startListening();
-        emit(state.copyWith(isListening: isListening, status: BuddyStatus.busy));
+        emit(state.copyWith(isListening: isListening, mode: BuddyMode.listening, status: BuddyStatus.busy));
 
         await emit.forEach<String>(buddyRepository.handleFeedback(), onData: (feedback) {
           return state.copyWith(
             mode: BuddyMode.speak,
             input: feedback,
-            status: BuddyStatus.idle,
           );
         });
       } else {
@@ -75,6 +75,11 @@ class BuddyBloc extends Bloc<BuddyEvent, BuddyState> {
         mode: BuddyMode.idle,
       ));
       await buddyRepository.speak(readableText);
+      emit(state.copyWith(status: BuddyStatus.idle));
+    });
+
+    on<BuddySetScrollTop>((event, emit) {
+      emit(state.copyWith(canScrollTop: event.canScrollTop));
     });
   }
 }

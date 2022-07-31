@@ -12,3 +12,9 @@ class BuddyCheckListenEvent extends BuddyEvent {}
 class BuddyStartListeningEvent extends BuddyEvent {}
 
 class BuddyCompleteListeningEvent extends BuddyEvent {}
+
+class BuddySetScrollTop extends BuddyEvent {
+  final bool canScrollTop;
+
+  BuddySetScrollTop({required this.canScrollTop});
+}
