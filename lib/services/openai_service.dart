@@ -11,8 +11,7 @@ class OpenAiService {
     final dio = Dio();
     final response = await dio.post('https://api.openai.com/v1/completions',
         options: Options(contentType: 'application/json', headers: {
-          'Authorization':
-              'Bearer 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',
+          'Authorization': 'Bearer ',
         }),
         data: {
           "model": "text-davinci-002",
