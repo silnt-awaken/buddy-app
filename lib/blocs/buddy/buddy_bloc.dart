@@ -11,18 +11,18 @@ class BuddyBloc extends Bloc<BuddyEvent, BuddyState> {
   final BuddyRepository buddyRepository;
   BuddyBloc({required this.buddyRepository})
       : super(const BuddyState(
-          prompt: {},
-          response: '',
-          input: '',
-          status: BuddyStatus.idle,
-          currentId: 1,
-          isMicAvailable: false,
-          isListening: false,
-          feedback: '',
-          mode: BuddyMode.idle,
-          canScrollTop: false,
-          deviceHeight: 0,
-        )) {
+            prompt: {},
+            response: '',
+            input: '',
+            status: BuddyStatus.idle,
+            currentId: 1,
+            isMicAvailable: false,
+            isListening: false,
+            feedback: '',
+            mode: BuddyMode.idle,
+            canScrollTop: false,
+            deviceHeight: 0,
+            feature: BuddyFeature.normal)) {
     on<BuddyInitializeEvent>((event, emit) async {
       await buddyRepository.speak('Hello, I am your buddy');
     });
@@ -33,10 +33,13 @@ class BuddyBloc extends Bloc<BuddyEvent, BuddyState> {
       emit(state.copyWith(isMicAvailable: isAvailable));
       if (isAvailable) {
         final isListening = await buddyRepository.startListening();
-        emit(state.copyWith(isListening: isListening, mode: BuddyMode.listening, status: BuddyStatus.busy));
+        emit(state.copyWith(
+            isListening: isListening,
+            mode: BuddyMode.listening,
+            status: BuddyStatus.busy));
 
-        await emit.forEach<String>(buddyRepository.handleFeedback(), onData: (feedback) {
-          print('feedback: $feedback');
+        await emit.forEach<String>(buddyRepository.handleFeedback(),
+            onData: (feedback) {
           return state.copyWith(
             mode: BuddyMode.speak,
             input: feedback,
@@ -49,12 +52,18 @@ class BuddyBloc extends Bloc<BuddyEvent, BuddyState> {
     });
     on<BuddyStartListeningEvent>((event, emit) async {
       if (state.isMicAvailable && state.isListening) {
-        await emit.forEach<String>(buddyRepository.handleResult(), onData: (result) {
+        await emit.forEach<String>(buddyRepository.handleResult(),
+            onData: (result) {
           final prompt = '$sender: $result\n';
           final newPrompt = {...state.prompt, state.currentId: prompt};
 
           return state.copyWith(
-              input: result, prompt: newPrompt, isListening: false, isMicAvailable: false, mode: BuddyMode.listening);
+            input: result,
+            prompt: newPrompt,
+            isListening: false,
+            isMicAvailable: false,
+            mode: BuddyMode.listening,
+          );
         });
       } else {
         emit(state.copyWith(status: BuddyStatus.error));
@@ -70,17 +79,25 @@ class BuddyBloc extends Bloc<BuddyEvent, BuddyState> {
         mode: BuddyMode.speak,
       ));
 
-      final response = await buddyRepository.sendMessage(newPrompt);
-      final readableText = buddyRepository.convertResponseToReadableText(response);
+      final response =
+          await buddyRepository.sendMessage(newPrompt, feature: state.feature);
+      final readableText =
+          buddyRepository.convertResponseToReadableText(response);
 
       // add response to map
-      final newResponse = {...newPrompt, state.currentId + 1: '$recipient:$readableText\n'};
+      final newResponse = {
+        ...newPrompt,
+        state.currentId + 1: '$recipient:$readableText\n'
+      };
 
       emit(state.copyWith(
         prompt: newResponse,
         response: readableText,
         currentId: newResponse.keys.last + 1,
         status: BuddyStatus.busy,
+        feature: state.input.contains('appointment')
+            ? BuddyFeature.booking
+            : BuddyFeature.normal,
       ));
       await buddyRepository.speak(readableText);
       emit(state.copyWith(mode: BuddyMode.idle, status: BuddyStatus.idle));

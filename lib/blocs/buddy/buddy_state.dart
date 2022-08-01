@@ -12,6 +12,7 @@ class BuddyState extends Equatable {
   final BuddyMode mode;
   final bool canScrollTop;
   final double deviceHeight;
+  final BuddyFeature feature;
 
   const BuddyState({
     required this.prompt,
@@ -25,6 +26,7 @@ class BuddyState extends Equatable {
     required this.mode,
     required this.canScrollTop,
     required this.deviceHeight,
+    required this.feature,
   });
 
   @override
@@ -39,7 +41,8 @@ class BuddyState extends Equatable {
         feedback,
         mode,
         canScrollTop,
-        deviceHeight
+        deviceHeight,
+        feature,
       ];
 
   BuddyState copyWith({
@@ -54,6 +57,7 @@ class BuddyState extends Equatable {
     BuddyMode? mode,
     bool? canScrollTop,
     double? deviceHeight,
+    BuddyFeature? feature,
   }) {
     return BuddyState(
       prompt: prompt ?? this.prompt,
@@ -67,6 +71,7 @@ class BuddyState extends Equatable {
       mode: mode ?? this.mode,
       canScrollTop: canScrollTop ?? this.canScrollTop,
       deviceHeight: deviceHeight ?? this.deviceHeight,
+      feature: feature ?? this.feature,
     );
   }
 }
@@ -81,4 +86,9 @@ enum BuddyMode {
   idle,
   listening,
   speak,
+}
+
+enum BuddyFeature {
+  normal,
+  booking,
 }

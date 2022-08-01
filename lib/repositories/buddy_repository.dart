@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:buddy_app/blocs/buddy/buddy_bloc.dart';
 import 'package:buddy_app/services/openai_service.dart';
 import 'package:flutter_speech/flutter_speech.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -15,11 +16,17 @@ class BuddyRepository {
 
   // initialize speech
   Future<bool> initializeSpeech() async {
-    return await _speech.activate('en_US').then((value) => true).catchError((error) => false);
+    return await _speech
+        .activate('en_US')
+        .then((value) => true)
+        .catchError((error) => false);
   }
 
   Future<bool> startListening() async {
-    return await _speech.listen().then((value) => true).catchError((error) => false);
+    return await _speech
+        .listen()
+        .then((value) => true)
+        .catchError((error) => false);
   }
 
   Stream<String> handleResult() {
@@ -42,7 +49,8 @@ class BuddyRepository {
     return controller.stream;
   }
 
-  Future<String> sendMessage(Map<int, String> prompt) async {
+  Future<String> sendMessage(Map<int, String> prompt,
+      {BuddyFeature feature = BuddyFeature.normal}) async {
     late final String response;
     // check for the last prompt in the map to see if it contains "book" to setup booking feature
     final lastPrompt = prompt.values.last;
@@ -53,6 +61,9 @@ class BuddyRepository {
               ' Sure, I can do that for you. What is the address of the location you want to book at? (Specify the city and state)');
     } else {
       final openAiService = OpenAiService();
+      if (feature == BuddyFeature.booking) {
+        prompt[prompt.keys.last] = 'Give me the coordidates of $lastPrompt';
+      }
       // convert the map to a string
       final promptString = prompt.values.join('\n');
       response = await openAiService.create(prompt: promptString);
